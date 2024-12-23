@@ -112,7 +112,7 @@ kubectl create namespace invalid_namespace
 ```
 Expected output:
 ```
-Error from server: Namespace name 'invalid_namespace' does not follow naming convention.
+rror from server: admission webhook "validate.namespace-creation.com" denied the request: Missing required labels: team, environment
 ```
 
 ---
