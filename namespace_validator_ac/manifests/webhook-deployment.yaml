@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: namespace-validator
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: namespace-validator
+  template:
+    metadata:
+      labels:
+        app: namespace-validator
+    spec:
+      containers:
+        - name: namespace-validator
+          image: muntashir/ns-admission-control:v2
+          ports:
+            - containerPort: 8443
+          env:
+            - name: TLS_CERT
+              value: "/etc/webhook/certs/tls.crt"
+            - name: TLS_KEY
+              value: "/etc/webhook/certs/tls.key"
+            - name: CA
+              value: "/etc/webhook/certs/ca.crt"
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /etc/webhook/certs
+              readOnly: true
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: webhook-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: namespace-validator
+  namespace: default
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    app: namespace-validator
