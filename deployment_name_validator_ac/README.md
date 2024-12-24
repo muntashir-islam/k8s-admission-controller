@@ -1,4 +1,4 @@
-# Namespace Validation Webhook
+# Deloyment Validation Webhook
 
 This repository contains a Python-based Kubernetes Admission Controller that performs the following operations:
 
@@ -101,15 +101,15 @@ docker build -t deployment-validator:latest .
 kubectl apply -f manifests/
 ```
 
-### 2. Test Namespace Validation
+### 2. Test Deployment Validation
 
-#### Create a Namespace with Valid Metadata
+#### Create a Deployment with Valid Metadata
 ```bash
 kubectl create deployment stage-app --image=nginx
 
 ```
 
-#### Create a Namespace with Invalid Metadata
+#### Create a Deployment with Invalid Metadata
 ```bash
 kubectl create deployment app
 ```
@@ -202,7 +202,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ### Common Errors
 
 #### `x509: certificate relies on legacy Common Name field`
-Ensure your certificate uses a Subject Alternative Name (SAN) matching `namespace-validator.default.svc`.
+Ensure your certificate uses a Subject Alternative Name (SAN) matching `deployment-validator.default.svc`.
 
 #### `expected response.uid="...", got ""`
 Verify that the webhook responds with the correct `uid` field.
