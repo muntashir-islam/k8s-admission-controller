@@ -1,0 +1,42 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validate-deployment-prefix
+webhooks:
+  - name: validate.deployment.stage.com
+    clientConfig:
+      service:
+        name: deployment-validator
+        namespace: default
+        path: "/validate"
+      caBundle: ${ENCODED_CA}
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments"]
+    admissionReviewVersions: ["v1"]
+    failurePolicy: "Fail"
+    sideEffects: "None"
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutate-deployment-prefix
+webhooks:
+  - name: mutate.deployment.stage.com
+    clientConfig:
+      service:
+        name: deployment-mutator
+        namespace: default
+        path: "/mutate"
+      caBundle: ${ENCODED_CA}
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments"]
+    admissionReviewVersions: ["v1"]
+    failurePolicy: "Fail"
+    sideEffects: "None"
