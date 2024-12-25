@@ -1,15 +1,15 @@
 # Deloyment Validation Webhook
 
-This repository contains a Python-based Kubernetes Admission Controller that performs the following operations:
+This repository contains a Golang-based Kubernetes Admission Controller that performs the following operations:
 
-1. **Mutation Webhook**: Automatically adds the prefix `stage-` to the names of incoming Kubernetes `Deployments`.
-2. **Validation Webhook**: Validates that Kubernetes `Deployments` have the prefix `stage-` in their names. If not, it rejects the deployment.
+1. **Mutation Webhook**: Automatically adds the given prefix or `prod-` if no prefix given to the names of incoming Kubernetes `Deployments`.
+2. **Validation Webhook**: Validates that Kubernetes `Deployments` have the given prefix or `prod-` if no prefix given in their names. If not, it rejects the deployment.
 
 
 ## Features
 
-- Mutates deployment names by adding the `stage-` prefix if it’s missing.
-- Validates that deployment names start with `stage-` to enforce naming conventions.
+- Mutates deployment names by adding the given prefix  or `prod-` if it’s missing.
+- Validates that deployment names start with given prefix or `prod-` if it’s missing to enforce naming conventions.
 - Provides detailed logging for debugging and monitoring.
 - Implements secure communication using TLS.
 
@@ -19,14 +19,14 @@ This repository contains a Python-based Kubernetes Admission Controller that per
 
 ```plaintext
 .
-├── admission_controller.py    # Main application code
+├── main.go    # Main application code
 ├── Dockerfile                 # Dockerfile to containerize the app
-├── requirements.txt           # Python dependencies
 ├── README.md 
 └── certs                      # Created after executing the create_k8s_object
     ├── tls.crt
     └── tls.key                # Project documentation
 ├── create_k8s_object.sh       # Generate TLS certs and deploy workload
+├── delete_k8s_object.sh       # Delete TLS certs and deploy workload
 └── manifests                  # Kubernetes manifests for deploying the webhook itself
     ├── weebhook-deployment.yaml
     └── webhook-config.yaml    #ValidatingWebhookConfiguration
@@ -36,7 +36,7 @@ This repository contains a Python-based Kubernetes Admission Controller that per
 
 ## Prerequisites
 
-- Python 3.10+
+- Golang 1.23.4
 - Kubernetes cluster (v1.30+).
 - `kubectl` CLI tool configured to access your cluster.
 - TLS certificate and key for secure communication.
@@ -51,33 +51,9 @@ git clone <repository-url>
 cd <repository-folder>
 ```
 
-### 2. Install Dependencies
+### 2. Install Everything
 ```bash
-pip install -r requirements.txt
-```
-
-### 3. Generate TLS Certificates
-Generate a self-signed certificate for the webhook server:
-
-```bash
-mkdir certs
-openssl genrsa -out certs/tls.key 2048
-openssl req -new -key certs/tls.key -out certs/tls.csr -subj "/CN=deployment-validator.default.svc"
-openssl x509 -req -extfile <(printf "subjectAltName=DNS:deployment-validator.default.svc") -in certs/tls.csr -signkey certs/tls.key -out certs/tls.crt
-```
-
-Base64 encode the certificate for the Kubernetes configuration:
-```bash
-echo "Creating K8s Webhooks for deployment"
-ENCODED_CA=$(cat certs/tls.crt | base64 | tr -d '\n')
-sed -e 's@${ENCODED_CA}@'"$ENCODED_CA"'@g' <"manifests/webhook-config.yml" | kubectl create -f -
-```
-
-### 4. Update Kubernetes Manifest
-Previous script will autometically replace the `<CA_BUNDLE>` placeholder in `manifests/webhook-config.yaml` with the contents of `cert.base64`:
-
-```yaml
-caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1...
+./create_k8s_objects.sh
 ```
 
 ---
@@ -105,7 +81,7 @@ kubectl apply -f manifests/
 
 #### Create a Deployment with Valid Metadata
 ```bash
-kubectl create deployment stage-app --image=nginx
+kubectl create deployment prod-app --image=nginx
 
 ```
 
@@ -190,13 +166,6 @@ webhooks:
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ---
-
-## Acknowledgments
-- Kubernetes Documentation
-- Flask Framework Documentation
-
----
-
 ## Troubleshooting
 
 ### Common Errors

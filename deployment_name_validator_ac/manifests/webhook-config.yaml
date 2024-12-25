@@ -6,7 +6,7 @@ webhooks:
   - name: validate.deployment.stage.com
     clientConfig:
       service:
-        name: deployment-validator
+        name: webhook
         namespace: default
         path: "/validate"
       caBundle: ${ENCODED_CA}
@@ -28,7 +28,7 @@ webhooks:
   - name: mutate.deployment.stage.com
     clientConfig:
       service:
-        name: deployment-mutator
+        name: webhook
         namespace: default
         path: "/mutate"
       caBundle: ${ENCODED_CA}

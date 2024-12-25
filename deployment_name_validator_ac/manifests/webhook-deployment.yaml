@@ -1,31 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-validator
+  name: webhook
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: deployment-validator
+      app: webhook
   template:
     metadata:
       labels:
-        app: deployment-validator
+        app: webhook
     spec:
       containers:
-        - name: deployment-validator
-          image: muntashir/deployment-validator-control:v1
+        - name: webhook
+          image: muntashir/deployment-validator-control:4
           ports:
             - containerPort: 8443
           env:
-            - name: TLS_CERT
-              value: "/etc/webhook/certs/tls.crt"
-            - name: TLS_KEY
-              value: "/etc/webhook/certs/tls.key"
+             - name: DEPLOYMENT_PREFIX
+               value: "prod-"
           volumeMounts:
             - name: webhook-certs
-              mountPath: /etc/webhook/certs
+              mountPath: /etc/certs
               readOnly: true
       volumes:
         - name: webhook-certs
@@ -35,11 +33,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: deployment-validator
+  name: webhook
   namespace: default
 spec:
   ports:
     - port: 443
       targetPort: 8443
   selector:
-    app: deployment-validator
+    app: webhook

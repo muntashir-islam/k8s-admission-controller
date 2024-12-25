@@ -1,19 +1,29 @@
-# Use a lightweight Python base image
-FROM python:3.10-slim
+# Start from the official Go image as the build stage
+FROM golang:1.23.4 as builder
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-
-# Install required Python libraries
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Copy application code
-COPY . /app
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Expose the port for the admission controller
+# Copy go.mod and go.sum files to the workspace
+COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+RUN go mod download
+
+# Copy the source code into the container
+COPY . .
+
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -o admission-webhook .
+
+# Use a minimal image for the final build
+FROM alpine:latest
+
+# Copy the compiled binary from the builder
+COPY --from=builder /app/admission-webhook /usr/local/bin/admission-webhook
+
+# Expose port 8443 for the webhook server
 EXPOSE 8443
 
-# Run the Flask app
-CMD ["python", "admission_controller.py"]
+# Command to run the executable
+ENTRYPOINT ["/usr/local/bin/admission-webhook"]
